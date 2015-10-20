@@ -173,5 +173,33 @@
     }
   };
 
+  // Aliases
+  radio.$.emit = radio.$.broadcast;
+  radio.$.on   = radio.$.subscribe;
+  radio.$.off  = radio.$.unsubscribe;
+
+  // Method initator constructor
+  radio.createChannel = function(args) {
+    if (!args[0]) {
+      console.log('No channel name');
+      return;
+    }
+    radio.$.channel(args[0]);
+    [].shift.apply(args);
+    return args;
+  };
+
+  radio.emit = function() {
+    radio.$.broadcast.apply(this.$, this.createChannel(arguments));
+  };
+
+  radio.on = function() {
+    radio.$.subscribe.apply(this.$, this.createChannel(arguments));
+  };
+
+  radio.off = function() {
+    radio.$.unsubscribe.apply(this.$, this.createChannel(arguments));
+  };
+
   return radio;
 });
