@@ -72,6 +72,11 @@
       var i, c = this.channels[this.channelName].slice(),
         l = c.length,
         subscriber, callback, context;
+
+      // Store that this has been triggered.
+      if (!this.channels[this.channelName].nonce) 
+        this.channels[this.channelName].nonce = arguments;
+
       //iterate through current channel and run each subscriber
       for (i = 0; i < l; i++) {
         subscriber = c[i];
@@ -98,6 +103,34 @@
       if (!c[name]) c[name] = [];
       this.channelName = name;
       return this;
+    },
+
+    /**
+     * Add Subscriber to channel or execute if already broadcasted.
+     */
+    broadcasted: function() {
+      var a = arguments, callback, context,
+        c = this.channels[this.channelName],
+        i, l = a.length,
+        p, ai = [];
+
+      // Subscribe this.
+      this.subscribe(arguments);
+
+      if (c.nonce) {
+
+        //run through each argument and execute it.
+        for (i = 0; i < l; i++) {
+          ai = a[i];
+          p  = typeof(ai) === "function" ? [ai] : ai;
+          if (typeof(p) === 'object' && p.length) {
+
+            callback = p[0];
+            context = p[1] || global;
+            callback.apply(context, c.nonce);
+          }
+        }
+      }
     },
 
     /**
@@ -175,6 +208,7 @@
 
   // Aliases
   radio.$.emit = radio.$.broadcast;
+  radio.$.has  = radio.$.broadcasted;
   radio.$.on   = radio.$.subscribe;
   radio.$.off  = radio.$.unsubscribe;
 
@@ -191,6 +225,10 @@
 
   radio.emit = function() {
     radio.$.broadcast.apply(this.$, this.createChannel(arguments));
+  };
+
+  radio.hash = function() {
+    radio.$.broadcasted.apply(this.$, this.createChannel(arguments));
   };
 
   radio.on = function() {
